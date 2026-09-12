@@ -184,6 +184,42 @@ function apartmentLabel(ap) {
   return ap.nom ? `${ap.nom}` : `${ap.numero}`;
 }
 
+// Convertit un numéro local marocain (0612345678) ou déjà international
+// (+212612345678, 00212612345678) au format attendu par wa.me (chiffres seuls, avec indicatif pays).
+function normalizePhoneWhatsApp(raw) {
+  let s = String(raw || '').replace(/[^\d+]/g, '');
+  if (!s) return '';
+  if (s.startsWith('+')) return s.slice(1);
+  if (s.startsWith('00')) return s.slice(2);
+  if (s.startsWith('0')) return '212' + s.slice(1);
+  return s;
+}
+
+function buildRelanceMessage(ap, montantDu) {
+  const nomDest = ap.nom ? ap.nom : ap.numero;
+  const residence = DATA.settings.nom || 'الإقامة';
+  return `السلام عليكم ${nomDest}،
+نتمنى أن تكونوا بخير.
+نود تذكيركم بلطف بأن مبلغ ${fmtMAD(montantDu)} الخاص بمساهمة الشقة ${ap.numero} في ${residence} لا يزال مستحقًا لحد الآن.
+نشكركم مسبقًا على تفهمكم وتعاونكم، ونبقى في خدمتكم لأي استفسار أو تسهيل.
+تحياتنا، إدارة العقار.`;
+}
+
+function relancerWhatsApp(apartmentId) {
+  const ap = DATA.apartments.find(a => a.id === apartmentId);
+  if (!ap) return;
+  const phone = normalizePhoneWhatsApp(ap.telephone);
+  if (!phone) {
+    alert("Aucun numéro de téléphone WhatsApp enregistré pour ce logement. Ajoutez-le d'abord dans sa fiche (onglet Logements).");
+    return;
+  }
+  const annee = DATA.settings.anneeAffichee;
+  const ecart = totalDueYear(ap, annee) - totalPaidYear(ap.id, annee);
+  const montant = ecart > 0 ? ecart : ap.cotisationMensuelle;
+  const message = buildRelanceMessage(ap, montant);
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
 function paiementsFor(apartmentId, annee) {
   return DATA.paiements.filter(p => p.apartmentId === apartmentId && p.annee === annee);
 }
@@ -208,6 +244,16 @@ function totalPaidAllTime(apartmentId) {
   return DATA.paiements
     .filter(p => p.apartmentId === apartmentId)
     .reduce((s, p) => s + Number(p.montant), 0);
+}
+
+function totalPaidMonthAllApartments(annee, mois) {
+  return DATA.apartments.reduce((s, ap) => s + totalPaidMonth(ap.id, annee, mois), 0);
+}
+function totalPaidYearAllApartments(annee) {
+  return DATA.apartments.reduce((s, ap) => s + totalPaidYear(ap.id, annee), 0);
+}
+function totalPaidAllTimeAllApartments() {
+  return DATA.apartments.reduce((s, ap) => s + totalPaidAllTime(ap.id), 0);
 }
 
 function depensesYear(annee) {
@@ -257,14 +303,20 @@ function renderDashboard() {
     retardEl.innerHTML = `<div class="empty-state"><p>Tous les logements sont à jour pour ${annee}.</p></div>`;
   } else {
     retardEl.innerHTML = enRetard.map(x => `
-      <div class="list-row">
+      <div class="list-row" style="cursor:default;">
         <div class="who">
           <div class="nom">${apartmentLabel(x.ap)}</div>
           <div class="num">${x.ap.numero}</div>
         </div>
-        <span class="badge retard">-${fmtMAD(x.ecart)}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge retard">-${fmtMAD(x.ecart)}</span>
+          ${x.ap.telephone ? `<button class="btn-relance-dash" data-id="${x.ap.id}" title="Relancer par WhatsApp" style="border:none;background:var(--sage);color:var(--white);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:0.8rem;">💬</button>` : ''}
+        </div>
       </div>
     `).join('');
+    retardEl.querySelectorAll('.btn-relance-dash').forEach(btn => {
+      btn.addEventListener('click', () => relancerWhatsApp(btn.dataset.id));
+    });
   }
 
   // Dernières dépenses
@@ -320,6 +372,7 @@ function openLogementDetail(apartmentId) {
   if (!ap) return;
   const annee = DATA.settings.anneeAffichee;
   const historique = paiementsFor(apartmentId, annee).sort((a, b) => (a.mois - b.mois) || a.date.localeCompare(b.date));
+  const ecart = totalDueYear(ap, annee) - totalPaidYear(ap.id, annee);
 
   openModal(`
     <h3>${apartmentLabel(ap)}</h3>
@@ -327,6 +380,8 @@ function openLogementDetail(apartmentId) {
     <input type="text" id="ed-numero" value="${escapeAttr(ap.numero)}">
     <label>Nom de l'occupant / propriétaire</label>
     <input type="text" id="ed-nom" value="${escapeAttr(ap.nom)}">
+    <label>Téléphone WhatsApp (optionnel)</label>
+    <input type="tel" id="ed-tel" value="${escapeAttr(ap.telephone || '')}" placeholder="0612345678">
     <label>Cotisation mensuelle (DH)</label>
     <input type="number" id="ed-cotis" min="0" step="0.01" value="${ap.cotisationMensuelle}">
 
@@ -334,6 +389,12 @@ function openLogementDetail(apartmentId) {
       <button class="btn" id="btn-save-logement">Enregistrer</button>
       <button class="btn secondary" id="btn-delete-logement">Supprimer</button>
     </div>
+
+    ${ecart > 0 ? `
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn brick" id="btn-relance-whatsapp">Relancer par WhatsApp (${fmtMAD(ecart)} en retard)</button>
+      </div>
+    ` : ''}
 
     <h3 style="margin-top:22px;">Historique ${annee}</h3>
     <div id="hist-list">
@@ -354,11 +415,17 @@ function openLogementDetail(apartmentId) {
   document.getElementById('btn-save-logement').addEventListener('click', () => {
     ap.numero = document.getElementById('ed-numero').value.trim() || ap.numero;
     ap.nom = document.getElementById('ed-nom').value.trim();
+    ap.telephone = document.getElementById('ed-tel').value.trim();
     ap.cotisationMensuelle = parseFloat(document.getElementById('ed-cotis').value) || 0;
     save();
     closeModal();
     render();
   });
+
+  const btnRelance = document.getElementById('btn-relance-whatsapp');
+  if (btnRelance) {
+    btnRelance.addEventListener('click', () => relancerWhatsApp(apartmentId));
+  }
 
   document.getElementById('btn-delete-logement').addEventListener('click', () => {
     if (!confirm(`Supprimer ${apartmentLabel(ap)} et tout son historique de paiements ?`)) return;
@@ -387,6 +454,8 @@ function openAddLogementModal() {
     <input type="text" id="new-numero" placeholder="App.18">
     <label>Nom de l'occupant / propriétaire</label>
     <input type="text" id="new-nom" placeholder="">
+    <label>Téléphone WhatsApp (optionnel)</label>
+    <input type="tel" id="new-tel" placeholder="0612345678">
     <label>Cotisation mensuelle (DH)</label>
     <input type="number" id="new-cotis" min="0" step="0.01" value="${DATA.settings.cotisationDefaut}">
     <div class="btn-row" style="margin-top:16px;">
@@ -396,8 +465,9 @@ function openAddLogementModal() {
   document.getElementById('btn-confirm-add-logement').addEventListener('click', () => {
     const numero = document.getElementById('new-numero').value.trim() || `App.${DATA.apartments.length + 1}`;
     const nom = document.getElementById('new-nom').value.trim();
+    const telephone = document.getElementById('new-tel').value.trim();
     const cotis = parseFloat(document.getElementById('new-cotis').value) || 0;
-    DATA.apartments.push({ id: uid(), numero, nom, cotisationMensuelle: cotis });
+    DATA.apartments.push({ id: uid(), numero, nom, telephone, cotisationMensuelle: cotis });
     save();
     closeModal();
     render();
@@ -410,6 +480,13 @@ function renderCotisations() {
   document.getElementById('cotis-year-label').textContent = DATA.settings.anneeAffichee;
   const annee = DATA.settings.anneeAffichee;
   const table = document.getElementById('cotis-matrix');
+
+  // Liste déroulante pour sauter directement à une année (plutôt que cliquer ‹ › en boucle)
+  const anneesConnues = new Set([annee, new Date().getFullYear()]);
+  DATA.paiements.forEach(p => anneesConnues.add(p.annee));
+  const anneesTriees = [...anneesConnues].sort((a, b) => a - b);
+  const yearJump = document.getElementById('cotis-year-jump');
+  yearJump.innerHTML = anneesTriees.map(y => `<option value="${y}" ${y === annee ? 'selected' : ''}>${y}</option>`).join('');
 
   let thead = '<thead><tr><th class="nom-col">Logement</th>';
   MOIS.forEach(m => thead += `<th>${m}</th>`);
@@ -438,6 +515,28 @@ function renderCotisations() {
   table.querySelectorAll('td.cell').forEach(td => {
     td.addEventListener('click', () => openPaiementModal(td.dataset.ap, parseInt(td.dataset.mois, 10)));
   });
+
+  updateCotisTotal();
+}
+
+function updateCotisTotal() {
+  const sel = document.getElementById('cotis-periode');
+  const val = sel ? sel.value : 'annee';
+  const annee = DATA.settings.anneeAffichee;
+  let total = 0, label = 'Total encaissé';
+  if (val === 'mois') {
+    const now = new Date();
+    total = totalPaidMonthAllApartments(now.getFullYear(), now.getMonth());
+    label = `Total encaissé — ${MOIS_LONG[now.getMonth()]} ${now.getFullYear()}`;
+  } else if (val === 'tout') {
+    total = totalPaidAllTimeAllApartments();
+    label = 'Total encaissé — depuis le début';
+  } else {
+    total = totalPaidYearAllApartments(annee);
+    label = `Total encaissé — ${annee}`;
+  }
+  document.getElementById('cotis-total').textContent = fmtMAD(total);
+  document.getElementById('cotis-total-label').textContent = label;
 }
 
 function openPaiementModal(apartmentId, mois) {
@@ -877,6 +976,12 @@ document.getElementById('btn-year-next').addEventListener('click', () => {
   save();
   render();
 });
+document.getElementById('cotis-year-jump').addEventListener('change', (e) => {
+  DATA.settings.anneeAffichee = parseInt(e.target.value, 10);
+  save();
+  render();
+});
+document.getElementById('cotis-periode').addEventListener('change', updateCotisTotal);
 
 document.getElementById('form-reglages').addEventListener('submit', (e) => {
   e.preventDefault();

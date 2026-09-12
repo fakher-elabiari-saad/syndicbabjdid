@@ -72,11 +72,25 @@
   <section id="view-cotisations" class="view">
     <div class="top-actions">
       <h2 class="section-title" style="margin:0;">Cotisations <span id="cotis-year-label"></span></h2>
-      <div style="display:flex; gap:6px;">
+      <div style="display:flex; gap:6px; align-items:center;">
         <button class="btn ghost" id="btn-year-prev">‹</button>
+        <select id="cotis-year-jump" style="width:auto; padding:8px 10px;"></select>
         <button class="btn ghost" id="btn-year-next">›</button>
       </div>
     </div>
+
+    <div class="filter-row">
+      <select id="cotis-periode">
+        <option value="mois">Ce mois-ci</option>
+        <option value="annee" selected>Cette année</option>
+        <option value="tout">Depuis le début</option>
+      </select>
+    </div>
+    <div class="card">
+      <h2 id="cotis-total-label">Total encaissé</h2>
+      <div class="value" id="cotis-total" style="font-family: var(--font-serif); font-size:1.6rem;">0 DH</div>
+    </div>
+
     <p class="hint">Touchez une case pour enregistrer ou modifier un paiement.</p>
     <div class="matrix-wrap">
       <table class="matrix" id="cotis-matrix"></table>
