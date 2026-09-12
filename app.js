@@ -50,8 +50,13 @@ function parsePeriodeLabel(label) {
 
   m = raw.match(/^([a-zéûîôàèç]+)[\s\-\/.]+(\d{2,4})$/i);
   if (m) {
-    const key = stripAccents(m[1]).slice(0, 4).replace(/[^a-z]/g, '');
-    let moisKey = Object.keys(monthNames).find(k => stripAccents(k).startsWith(key) || key.startsWith(stripAccents(k).slice(0, 3)));
+    const key = stripAccents(m[1]).replace(/[^a-z]/g, '');
+    // Comparaison sur la longueur du plus court des deux mots (jamais tronquée à 3
+    // lettres) : évite la collision "juin"/"juil" qui partagent le préfixe "jui".
+    let moisKey = Object.keys(monthNames).find(k => {
+      const kNorm = stripAccents(k);
+      return key.length <= kNorm.length ? kNorm.startsWith(key) : key.startsWith(kNorm);
+    });
     if (moisKey !== undefined && monthNames[moisKey] !== undefined) {
       let annee = parseInt(m[2], 10);
       if (annee < 100) annee += 2000;
