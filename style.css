@@ -116,6 +116,7 @@ main {
 
 .stat.solde-pos .value { color: var(--sage); }
 .stat.solde-neg .value { color: var(--brick); }
+.stat.wide { grid-column: 1 / -1; }
 
 .list-row {
   display: flex;

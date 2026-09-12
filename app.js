@@ -204,6 +204,12 @@ function totalPaidYear(apartmentId, annee) {
   return paiementsFor(apartmentId, annee).reduce((s, p) => s + Number(p.montant), 0);
 }
 
+function totalPaidAllTime(apartmentId) {
+  return DATA.paiements
+    .filter(p => p.apartmentId === apartmentId)
+    .reduce((s, p) => s + Number(p.montant), 0);
+}
+
 function depensesYear(annee) {
   return DATA.depenses.filter(d => new Date(d.date).getFullYear() === annee);
 }
@@ -221,14 +227,24 @@ function renderDashboard() {
     attendu += totalDueYear(ap, annee);
   });
   const totalDepenses = depensesYear(annee).reduce((s, d) => s + Number(d.montant), 0);
-  const solde = encaisse - totalDepenses;
+  const resultatExercice = encaisse - totalDepenses;
+
+  // Solde de caisse réel : cumulé depuis le début, toutes années confondues —
+  // distinct du résultat de l'exercice qui ne porte que sur l'année affichée.
+  const encaisseCumule = DATA.apartments.reduce((s, ap) => s + totalPaidAllTime(ap.id), 0);
+  const depensesCumule = DATA.depenses.reduce((s, d) => s + Number(d.montant), 0);
+  const soldeCumule = encaisseCumule - depensesCumule;
 
   document.getElementById('stat-encaisse').textContent = fmtMAD(encaisse);
   document.getElementById('stat-attendu').textContent = fmtMAD(attendu);
   document.getElementById('stat-depenses').textContent = fmtMAD(totalDepenses);
-  document.getElementById('stat-solde').textContent = fmtMAD(solde);
+  document.getElementById('stat-solde').textContent = fmtMAD(resultatExercice);
   const soldeBox = document.getElementById('stat-solde-box');
-  soldeBox.className = 'stat ' + (solde >= 0 ? 'solde-pos' : 'solde-neg');
+  soldeBox.className = 'stat ' + (resultatExercice >= 0 ? 'solde-pos' : 'solde-neg');
+
+  document.getElementById('stat-solde-cumule').textContent = fmtMAD(soldeCumule);
+  const soldeCumuleBox = document.getElementById('stat-solde-cumule-box');
+  soldeCumuleBox.className = 'stat wide ' + (soldeCumule >= 0 ? 'solde-pos' : 'solde-neg');
 
   // Retards
   const retardEl = document.getElementById('dashboard-retard');
