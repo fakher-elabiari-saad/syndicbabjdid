@@ -3,9 +3,17 @@
 ## Ce que fait l'app
 - Tableau de bord : cotisations encaissées / attendues, dépenses, solde de caisse, retards de paiement.
 - Logements : fiche par lot (numéro, nom de l'occupant, cotisation mensuelle), historique des paiements, export CSV individuel.
-- Cotisations : grille année × mois × logement, saisie des règlements en un clic, export CSV global.
-- Dépenses générales : catégories personnalisables, description, fournisseur, montant, filtres par année/catégorie, export CSV.
-- Réglages : nom de la résidence, cotisation par défaut, catégories de dépenses, sauvegarde/restauration, réinitialisation.
+- Cotisations : grille année × mois × logement, saisie des règlements en un clic, export **Excel (.xlsx)** au format période × appartements (comme votre fichier existant), et **import** d'un fichier Excel existant.
+- Dépenses générales : catégories personnalisables, description, fournisseur, montant, filtres par année/catégorie, export **Excel (.xlsx)**, et **import** d'un fichier Excel existant.
+- Réglages : nom de la résidence, cotisation par défaut, catégories de dépenses, sauvegarde/restauration (JSON), réinitialisation.
+- Montants affichés en **dirhams (DH)**.
+
+## Importer votre historique existant pour continuer dedans
+- **Cotisations** : dans l'onglet Cotisations, bouton "Importer un fichier Excel de cotisations existant".
+  Le fichier doit avoir une colonne "Période" (ex. `févr-22`, `mars-2022`) puis une colonne par
+  appartement (ex. `App.1`, `App.2`...). Les appartements manquants sont créés automatiquement.
+- **Dépenses** : dans l'onglet Dépenses, bouton "Importer un fichier Excel de dépenses existant".
+  Colonnes reconnues (dans n'importe quel ordre) : Date, Catégorie, Description, Fournisseur, Montant.
 - Fonctionne hors-ligne une fois ouverte (service worker), installable sur l'écran d'accueil (PWA).
 - Toutes les données restent **sur l'appareil** (localStorage) — aucune donnée n'est envoyée à un serveur.
 

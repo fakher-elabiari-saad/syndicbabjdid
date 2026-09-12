@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -80,8 +81,13 @@
       <table class="matrix" id="cotis-matrix"></table>
     </div>
     <div class="btn-row" style="margin-top:14px;">
-      <button class="btn secondary" id="btn-export-cotis-all">Exporter toutes les cotisations (CSV)</button>
+      <button class="btn secondary" id="btn-export-cotis-all">Télécharger le fichier Excel des cotisations</button>
     </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-import-cotis" style="width:100%;">Importer un fichier Excel de cotisations existant</button>
+    </div>
+    <input type="file" id="input-import-cotis" accept=".xlsx,.xls" style="display:none;">
+    <p class="hint">Le fichier doit avoir une colonne "Période" (ex. févr-22) et une colonne par appartement (ex. App.1, App.2...).</p>
   </section>
 
   <!-- DEPENSES -->
@@ -102,8 +108,13 @@
       <div id="depenses-list"></div>
     </div>
     <div class="btn-row">
-      <button class="btn secondary" id="btn-export-depenses">Exporter les dépenses (CSV)</button>
+      <button class="btn secondary" id="btn-export-depenses">Télécharger le fichier Excel des dépenses</button>
     </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-import-depenses" style="width:100%;">Importer un fichier Excel de dépenses existant</button>
+    </div>
+    <input type="file" id="input-import-depenses" accept=".xlsx,.xls" style="display:none;">
+    <p class="hint">Colonnes reconnues : Date, Catégorie, Description, Fournisseur, Montant.</p>
   </section>
 
   <!-- REGLAGES -->
@@ -114,7 +125,7 @@
       <form id="form-reglages">
         <label for="r-nom">Nom de la résidence</label>
         <input type="text" id="r-nom" placeholder="Résidence Les Tilleuls">
-        <label for="r-cotis">Cotisation mensuelle par défaut (€)</label>
+        <label for="r-cotis">Cotisation mensuelle par défaut (DH)</label>
         <input type="number" id="r-cotis" min="0" step="0.01">
         <button type="submit" class="btn" style="margin-top:16px;">Enregistrer</button>
       </form>
