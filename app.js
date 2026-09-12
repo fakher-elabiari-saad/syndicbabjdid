@@ -22,6 +22,18 @@ function stripAccents(s) {
 
 // Parses labels like "févr-22", "Mars-2022", "avril 2022", "04/2022"...
 function parsePeriodeLabel(label) {
+  // Excel convertit parfois automatiquement un texte type "juil-22" en vraie date :
+  // la cellule arrive alors comme un objet Date ou un numéro de série, pas comme texte.
+  if (label instanceof Date && !isNaN(label)) {
+    return { annee: label.getFullYear(), mois: label.getMonth() };
+  }
+  if (typeof label === 'number' && isFinite(label)) {
+    if (typeof XLSX !== 'undefined' && XLSX.SSF && typeof XLSX.SSF.parse_date_code === 'function') {
+      const d = XLSX.SSF.parse_date_code(label);
+      if (d) return { annee: d.y, mois: d.m - 1 };
+    }
+  }
+
   const raw = String(label ?? '').trim();
   if (!raw) return null;
 
