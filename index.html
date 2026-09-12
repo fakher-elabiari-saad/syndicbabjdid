@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Syndic — Résidence</title>
+<meta name="theme-color" content="#1B2A3A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Syndic">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 id="residence-name">Syndic — Résidence</h1>
+  <p id="residence-sub">17 logements · exercice <span id="header-year"></span></p>
+</header>
+
+<main>
+
+  <!-- TABLEAU DE BORD -->
+  <section id="view-dashboard" class="view active">
+    <div class="stat-grid">
+      <div class="stat"><div class="label">Cotisations encaissées</div><div class="value" id="stat-encaisse">0 €</div></div>
+      <div class="stat"><div class="label">Cotisations attendues</div><div class="value" id="stat-attendu">0 €</div></div>
+      <div class="stat"><div class="label">Dépenses de l'exercice</div><div class="value" id="stat-depenses">0 €</div></div>
+      <div class="stat" id="stat-solde-box"><div class="label">Solde de caisse</div><div class="value" id="stat-solde">0 €</div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>Logements en retard</h2>
+      <div id="dashboard-retard"></div>
+    </div>
+
+    <div class="card">
+      <h2>Dernières dépenses</h2>
+      <div id="dashboard-depenses"></div>
+    </div>
+
+    <div class="card">
+      <h2>Sauvegarde</h2>
+      <p class="hint">Toutes les données sont stockées sur cet appareil uniquement. Exportez régulièrement une sauvegarde.</p>
+      <div class="btn-row">
+        <button class="btn secondary" id="btn-export-backup">Exporter la sauvegarde</button>
+        <button class="btn secondary" id="btn-import-backup">Importer</button>
+      </div>
+      <input type="file" id="input-import-backup" accept="application/json" style="display:none;">
+    </div>
+  </section>
+
+  <!-- LOGEMENTS -->
+  <section id="view-logements" class="view">
+    <div class="top-actions">
+      <h2 class="section-title" style="margin:0;">Logements</h2>
+      <button class="btn ghost" id="btn-add-logement">+ Ajouter</button>
+    </div>
+    <div class="card" style="padding: 6px 16px;">
+      <div id="logements-list"></div>
+    </div>
+  </section>
+
+  <!-- COTISATIONS -->
+  <section id="view-cotisations" class="view">
+    <div class="top-actions">
+      <h2 class="section-title" style="margin:0;">Cotisations <span id="cotis-year-label"></span></h2>
+      <div style="display:flex; gap:6px;">
+        <button class="btn ghost" id="btn-year-prev">‹</button>
+        <button class="btn ghost" id="btn-year-next">›</button>
+      </div>
+    </div>
+    <p class="hint">Touchez une case pour enregistrer ou modifier un paiement.</p>
+    <div class="matrix-wrap">
+      <table class="matrix" id="cotis-matrix"></table>
+    </div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn secondary" id="btn-export-cotis-all">Exporter toutes les cotisations (CSV)</button>
+    </div>
+  </section>
+
+  <!-- DEPENSES -->
+  <section id="view-depenses" class="view">
+    <div class="top-actions">
+      <h2 class="section-title" style="margin:0;">Dépenses générales</h2>
+      <button class="btn ghost" id="btn-add-depense">+ Ajouter</button>
+    </div>
+    <div class="filter-row">
+      <select id="filter-depense-annee"></select>
+      <select id="filter-depense-categorie"></select>
+    </div>
+    <div class="card">
+      <h2>Total filtré</h2>
+      <div class="value" id="depenses-total" style="font-family: var(--font-serif); font-size:1.6rem;">0 €</div>
+    </div>
+    <div class="card" style="padding: 6px 16px;">
+      <div id="depenses-list"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="btn-export-depenses">Exporter les dépenses (CSV)</button>
+    </div>
+  </section>
+
+  <!-- REGLAGES -->
+  <section id="view-reglages" class="view">
+    <h2 class="section-title">Réglages</h2>
+    <div class="card">
+      <h2>Résidence</h2>
+      <form id="form-reglages">
+        <label for="r-nom">Nom de la résidence</label>
+        <input type="text" id="r-nom" placeholder="Résidence Les Tilleuls">
+        <label for="r-cotis">Cotisation mensuelle par défaut (€)</label>
+        <input type="number" id="r-cotis" min="0" step="0.01">
+        <button type="submit" class="btn" style="margin-top:16px;">Enregistrer</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Catégories de dépenses</h2>
+      <div id="categories-list"></div>
+      <form id="form-add-categorie" class="btn-row" style="margin-top:10px;">
+        <input type="text" id="new-categorie" placeholder="Nouvelle catégorie">
+        <button type="submit" class="btn secondary" style="flex:0 0 auto; width:auto; padding:10px 16px;">Ajouter</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Réinitialiser</h2>
+      <p class="hint">Efface toutes les données de cet appareil. Cette action est irréversible.</p>
+      <button class="btn brick" id="btn-reset-all">Tout effacer</button>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-view="dashboard">
+    <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 11L12 4l9 7"/><path d="M5 10v10h14V10"/></svg>
+    Tableau
+  </button>
+  <button class="tab-btn" data-view="logements">
+    <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>
+    Logements
+  </button>
+  <button class="tab-btn" data-view="cotisations">
+    <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M8 4v16"/></svg>
+    Cotisations
+  </button>
+  <button class="tab-btn" data-view="depenses">
+    <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+    Dépenses
+  </button>
+  <button class="tab-btn" data-view="reglages">
+    <svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg>
+    Réglages
+  </button>
+</nav>
+
+<!-- MODALS -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
