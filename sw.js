@@ -1,13 +1,13 @@
-const CACHE_NAME = 'syndic-cache-v2';
+const CACHE_NAME = 'syndic-cache-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
+  './vendor-xlsx.js',
   './icons/icon-192.png',
-  './icons/icon-512.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="vendor-xlsx.js"></script>
 </head>
 <body>
 
@@ -29,10 +29,10 @@
   <!-- TABLEAU DE BORD -->
   <section id="view-dashboard" class="view active">
     <div class="stat-grid">
-      <div class="stat"><div class="label">Cotisations encaissées</div><div class="value" id="stat-encaisse">0 €</div></div>
-      <div class="stat"><div class="label">Cotisations attendues</div><div class="value" id="stat-attendu">0 €</div></div>
-      <div class="stat"><div class="label">Dépenses de l'exercice</div><div class="value" id="stat-depenses">0 €</div></div>
-      <div class="stat" id="stat-solde-box"><div class="label">Solde de caisse</div><div class="value" id="stat-solde">0 €</div></div>
+      <div class="stat"><div class="label">Cotisations encaissées</div><div class="value" id="stat-encaisse">0 DH</div></div>
+      <div class="stat"><div class="label">Cotisations attendues</div><div class="value" id="stat-attendu">0 DH</div></div>
+      <div class="stat"><div class="label">Dépenses de l'exercice</div><div class="value" id="stat-depenses">0 DH</div></div>
+      <div class="stat" id="stat-solde-box"><div class="label">Solde de caisse</div><div class="value" id="stat-solde">0 DH</div></div>
     </div>
 
     <div class="card" style="margin-top:14px;">
@@ -102,7 +102,7 @@
     </div>
     <div class="card">
       <h2>Total filtré</h2>
-      <div class="value" id="depenses-total" style="font-family: var(--font-serif); font-size:1.6rem;">0 €</div>
+      <div class="value" id="depenses-total" style="font-family: var(--font-serif); font-size:1.6rem;">0 DH</div>
     </div>
     <div class="card" style="padding: 6px 16px;">
       <div id="depenses-list"></div>

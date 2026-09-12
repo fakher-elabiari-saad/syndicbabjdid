@@ -488,6 +488,10 @@ function exportAllCotisations() {
 }
 
 function importCotisationsExcel(file) {
+  if (typeof XLSX === 'undefined') {
+    alert("La fonction d'import Excel n'a pas pu se charger. Fermez complètement l'application et rouvrez-la, puis réessayez.");
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
@@ -683,6 +687,10 @@ function exportDepenses() {
 }
 
 function importDepensesExcel(file) {
+  if (typeof XLSX === 'undefined') {
+    alert("La fonction d'import Excel n'a pas pu se charger. Fermez complètement l'application et rouvrez-la, puis réessayez.");
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
@@ -750,10 +758,19 @@ function importDepensesExcel(file) {
 }
 
 function downloadXLSX(filename, rows, sheetName) {
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Feuille1');
-  XLSX.writeFile(wb, filename);
+  if (typeof XLSX === 'undefined') {
+    alert("La fonction d'export Excel n'a pas pu se charger. Fermez complètement l'application et rouvrez-la, puis réessayez.");
+    return;
+  }
+  try {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Feuille1');
+    XLSX.writeFile(wb, filename);
+  } catch (err) {
+    console.error(err);
+    alert("Une erreur est survenue pendant la génération du fichier Excel.");
+  }
 }
 
 /* ===================== Render: Réglages ===================== */
